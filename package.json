@@ -1,0 +1,8 @@
+{
+  "name": "node-framework-experiment",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": "https://github.com/blacknred/node-framework-experiment.git",
+  "author": "blcknrd <tretyakov.dmi@gmail.com>",
+  "license": "MIT"
+}
