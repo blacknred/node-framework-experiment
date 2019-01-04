@@ -4,5 +4,9 @@
   "main": "index.js",
   "repository": "https://github.com/blacknred/node-framework-experiment.git",
   "author": "blcknrd <tretyakov.dmi@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "minimal": "node index.minimal.js",
+    "advanced": "node index.advanced.js"
+  }
 }

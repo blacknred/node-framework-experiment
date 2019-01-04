@@ -1,8 +1,13 @@
 const F = require('./framework');
-const restRoutes = require('./app');
-const restMiddlewares = require('./middlewares');
+const {
+    routes: restRoutes,
+    middleware: restMiddlewares
+} = require('./app');
+
+F.log('Lets setup advanced server!');
 
 const f = new F({
+    timer: true,
     port: 3003,
 });
 

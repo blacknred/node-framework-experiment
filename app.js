@@ -3,7 +3,8 @@
 const APP = {
     models: {},
     controllers: {},
-    routes: null,
+    routes: [],
+    middleware: [],
 };
 
 /*  models */
@@ -53,7 +54,7 @@ APP.controllers.addCar = async (ctx) => {
 
 /* routes */
 
-APP.routes = [{
+APP.routes.push(...[{
         method: 'GET',
         url: '/api/cars',
         handler: APP.controllers.getCars
@@ -64,6 +65,23 @@ APP.routes = [{
         // middleware: [],
         handler: APP.controllers.addCar
     },
-];
+]);
 
-module.exports = APP.routes;
+/* middleware */
+APP.middleware.push(...[
+    (async (ctx, next) => {
+        ctx.log('mddlwr2');
+        await next();
+    }),
+    (async (ctx, next) => {
+        setTimeout(async () => {
+            ctx.log('mddlwr3');
+            await next();
+        }, 100)
+    })
+]);
+
+module.exports = {
+    routes: APP.routes,
+    middleware: APP.middleware
+};

@@ -1,11 +1,12 @@
+var url = require('url');
 const http = require('http');
 const qs = require('querystring');
 
 /** 
  * Class representing a framework.
- * @class Framework
+ * @class F
  */
-module.exports = class Framework {
+module.exports = class F {
     /**
      * Create a framework.
      * @param {Options} opts - The options value.
@@ -13,17 +14,23 @@ module.exports = class Framework {
     constructor(opts = {}) {
         /** 
          * @typedef {Object} Options The Options to use in the framework instanse.  
-         * @property {number} [port=3000] The server listening port.  
+         * @property {number} [port=3003] The server listening port.  
          * @property {string} [domain='localhost'] The server listening domain.
-         * @property {boolean} [bodyParser=true] The user's age.
+         * @property {boolean} [bodyParser=true] The bodyparser middleware flag.
+         * @property {boolean} [timer=false] The timer middleware flag.
+         * @property {boolean} [errorHandler=true] The errorHandler middleware flag.
+         * @property {Object} responseSchema The api response schema object.
          */
         /**
          * @type {Options} opts
          */
         this.opts = {
-            port: 3000,
+            port: 3003,
             domain: 'localhost',
             bodyParser: true,
+            timer: false,
+            errorHandler: true,
+            responseSchema: {},
             ...opts
         };
 
@@ -32,7 +39,7 @@ module.exports = class Framework {
          */
         this.middleware = [];
     }
-    
+
     /** Description of the middleware
      *  @callback middleware
      *  @param {Ctx} ctx
@@ -61,21 +68,18 @@ module.exports = class Framework {
      * @returns void
      */
     run(ctx) {
-        const done = () => {
-            if (this.opts.timer) {
-                const ms = new Date() - ctx.timestamp;
-                ctx.res.setHeader('X-Response-Time', ms + 'ms');
-                this.log('Response time:', ms + 'ms');
+        this.middleware.reduceRight(
+            function (done, next) {
+                // middleware execution scope
+                return function () {
+                    return next(ctx, done);
+                }
+            },
+            async () => {
+                ctx.res.write(ctx.body);
+                ctx.res.end();
             }
-            ctx.res.write(ctx.body);
-            ctx.res.end();
-        };
-        this.middleware.reduceRight(function (done, next) {
-            // middleware execution scope
-            return function () {
-                return next(ctx, done);
-            }
-        }, done)(ctx);
+        )(ctx);
     }
 
     /**
@@ -84,12 +88,19 @@ module.exports = class Framework {
      */
     inject() {
         const {
+            timer,
             bodyParser,
+            errorHandler,
         } = this.opts;
 
-        // add utilities
         if (bodyParser) {
             this.middleware.unshift(this.bodyParser);
+        }
+        if (timer) {
+            this.middleware.push(this.timer.bind(this));
+        }
+        if (errorHandler) {
+            this.middleware.push(this.errorHandler);
         }
     }
 
@@ -101,11 +112,34 @@ module.exports = class Framework {
      */
     /**
      * Routing method.
-     * @param {(Route|Route[])} rts - single middleware or array.
+     * @param {(Route|Route[])} rts - single routing object or array.
      * @returns void
      */
     route(rts) {
-
+        [].concat(rts).forEach(({
+            method = 'GET',
+            url: routeUrl,
+            middleware,
+            schema,
+            handler = () => {}
+        }) => {
+            this.add(async (ctx, next) => {
+                if (ctx.req.method === method.toUpperCase()) {
+                    var urlParts = url.parse(ctx.req.url, true);
+                    // TODO: reqexp mask?
+                    if (urlParts.pathname === routeUrl) {
+                        // TODO: process the related middleware
+                        const data = await handler(ctx);
+                        // TODO: global or specific responseSchema
+                        ctx.body = JSON.stringify({
+                            status: 'ok',
+                            data
+                        });
+                    }
+                }
+                await next();
+            });
+        });
     }
 
     /**
@@ -113,11 +147,11 @@ module.exports = class Framework {
      * @param {...*} args
      * @returns void
      */
-    log(...args) {
+    static log(...args) {
         const date = new Date();
         const datetime = date.toJSON().slice(0, 10) +
             " " + new Date(date).toString().split(' ')[4];
-        console.log(`[Framework at ${datetime}]:`, ...args);
+        console.log(`[[F]ramework at ${datetime}]:`, ...args);
     }
 
     /**
@@ -130,43 +164,72 @@ module.exports = class Framework {
     bodyParser(ctx, next) {
         if (ctx.req.method === 'GET') {
             next();
+        } else {
+            let data = '';
+            ctx.req.on('data', function (chunk) {
+                data += chunk;
+            });
+            ctx.req.on('end', function () {
+                ctx.req.body = qs.parse(data);
+                next();
+            });
         }
-        let data = '';
-        ctx.req.on('data', function (chunk) {
-            data += chunk;
-        });
-        ctx.req.on('end', function () {
-            ctx.req.body = qs.parse(data);
-            next();
-        });
+    }
+
+    /**
+     * Timer middleware.
+     * @type {middleware} timer
+     * @param {Object} ctx request context object
+     * @param {*} next next middleware
+     * @returns void
+     */
+    timer(ctx, next) {
+        if (this.opts.timer) {
+            const ms = new Date() - ctx.timestamp;
+            ctx.res.setHeader('X-Response-Time', ms + 'ms');
+            this.constructor.log('Response time:', ms + 'ms');
+        }
+        next();
+    }
+
+    /**
+     * Error middleware.
+     * @type {middleware} errorHandler
+     * @param {Object} ctx request context object
+     * @param {*} next next middleware
+     * @returns void
+     */
+    errorHandler(ctx, next) {
+        // TODO: errors handler
+        next();
     }
 
     /**
      * Create and start server.
-     * @param {(middleware|middleware[])} fns - single middlleware or array.
      * @returns void
      */
     async go() {
-        const {
+        let {
             port,
             domain,
             greeting,
         } = this.opts;
         try {
-            const server = http.createServer();
-            const message = greeting || `Server is running on ${domain}:${port}...`
-            await this.inject();
-            server.on('request', (req, res) => {
-                this.run({
-                    req,
-                    res,
-                    log: this.log,
-                    timestamp: new Date(),
-                });
-            })
-            server.listen(port, domain, this.log(message));
+            this.inject();
+            greeting = greeting || `Server is running on ${domain}:${port}...`
+            await http
+                .createServer()
+                .on('request', (req, res) => {
+                    this.run({
+                        req,
+                        res,
+                        log: this.constructor.log,
+                        timestamp: new Date(),
+                    });
+                })
+                .listen(port, domain, this.constructor.log(greeting));
         } catch (err) {
-            this.log(err);
+            this.constructor.log(err);
             process.exit(1);
         }
     }
