@@ -1,26 +1,5 @@
 const http = require('http');
-
-/** 
- * @typedef {Object} Options The Options to use in the framework instanse.  
- * @property {number} [port=3000] The server listening port.  
- * @property {string} [domain='localhost'] The server listening domain.
- * @property {boolean} [bodyParser=true] The user's age.
- */
-
- /** 
- * @typedef {Object} Ctx The request context object.  
- * @property {Object} req The request object.  
- * @property {Object} res The response object.
- * @property {number} startTime The request timestamp.
- * @property {Function} log The logger utility method.
- */
-
-/** Description of the middleware
-    @callback middleware
-    @param {Object} ctx request context object
-    @param {*} next next middleware
-    @returns void
-*/
+const qs = require('querystring');
 
 /** 
  * Class representing a framework.
@@ -32,6 +11,12 @@ module.exports = class Framework {
      * @param {Options} opts - The options value.
      */
     constructor(opts = {}) {
+        /** 
+         * @typedef {Object} Options The Options to use in the framework instanse.  
+         * @property {number} [port=3000] The server listening port.  
+         * @property {string} [domain='localhost'] The server listening domain.
+         * @property {boolean} [bodyParser=true] The user's age.
+         */
         /**
          * @type {Options} opts
          */
@@ -43,28 +28,58 @@ module.exports = class Framework {
         };
 
         /** 
-         * @property {middleware[]} middlewares The middlewares array.
+         * @property {middleware[]} middleware The middleware array.
          */
-        this.middlewares = [];
-
-        /** 
-         * @property {Function} chaining A method to operate of middlewares.
-         * @returns void
-         */
-        //this.chaining = this.chaining.bind(this);
+        this.middleware = [];
     }
-
+    
+    /** Description of the middleware
+     *  @callback middleware
+     *  @param {Ctx} ctx
+     *  @param {Function} next next middleware
+     *  @returns void
+     */
     /**
-     * Add a middleware.
+     * Method of adding middleware.
      * @param {(middleware|middleware[])} fns - single middlleware or array.
      * @returns void
      */
     add(fns) {
-        this.middlewares = this.middlewares.concat(fns);
+        this.middleware = this.middleware.concat(fns);
+    }
+
+    /** 
+     * @typedef {Object} Ctx The request context object.  
+     * @property {Object} req The request object.  
+     * @property {Object} res The response object.
+     * @property {number} timestamp The request timestamp.
+     * @property {Function} log The logger utility method.
+     */
+    /** 
+     * The middleware binding method.
+     * @param {Ctx} ctx- request context object.
+     * @returns void
+     */
+    run(ctx) {
+        const done = () => {
+            if (this.opts.timer) {
+                const ms = new Date() - ctx.timestamp;
+                ctx.res.setHeader('X-Response-Time', ms + 'ms');
+                this.log('Response time:', ms + 'ms');
+            }
+            ctx.res.write(ctx.body);
+            ctx.res.end();
+        };
+        this.middleware.reduceRight(function (done, next) {
+            // middleware execution scope
+            return function () {
+                return next(ctx, done);
+            }
+        }, done)(ctx);
     }
 
     /**
-     * Inject the build-in middlewares.
+     * Implementing build-in middleware method.
      * @returns void
      */
     inject() {
@@ -74,35 +89,27 @@ module.exports = class Framework {
 
         // add utilities
         if (bodyParser) {
-            this.middlewares.unshift(this.bodyParser);
+            this.middleware.unshift(this.bodyParser);
         }
     }
 
     /** 
-     * A method to operate of middlewares.
-     * @param {Ctx} ctx- request context object.
+     * @typedef {Object} Route The route object. 
+     * @property {string} method The request http method.
+     * @property {string} url The request endpoint url.
+     * @property {Function} handler The request handler.
+     */
+    /**
+     * Routing method.
+     * @param {(Route|Route[])} rts - single middleware or array.
      * @returns void
      */
-    chaining(ctx) {
-        const done = () => {
-            if (this.opts.timer) {
-                const ms = new Date() - ctx.startTime;
-                ctx.res.setHeader('X-Response-Time', ms + 'ms');
-                this.log('Response time:', ms + 'ms');
-            }
-            ctx.res.write(ctx.body);
-            ctx.res.end();
-        };
-        this.middlewares.reduceRight(function (done, next) {
-            // middleware execution scope
-            return function () {
-                return next(ctx, done);
-            }
-        }, done)(ctx);
+    route(rts) {
+
     }
 
     /**
-     * Logger.
+     * Logging method.
      * @param {...*} args
      * @returns void
      */
@@ -114,15 +121,24 @@ module.exports = class Framework {
     }
 
     /**
-     * Parse POST body.
+     * BodyParser middleware.
      * @type {middleware} bodyParser
      * @param {Object} ctx request context object
      * @param {*} next next middleware
      * @returns void
      */
     bodyParser(ctx, next) {
-        //
-        next();
+        if (ctx.req.method === 'GET') {
+            next();
+        }
+        let data = '';
+        ctx.req.on('data', function (chunk) {
+            data += chunk;
+        });
+        ctx.req.on('end', function () {
+            ctx.req.body = qs.parse(data);
+            next();
+        });
     }
 
     /**
@@ -130,7 +146,7 @@ module.exports = class Framework {
      * @param {(middleware|middleware[])} fns - single middlleware or array.
      * @returns void
      */
-    async run() {
+    async go() {
         const {
             port,
             domain,
@@ -141,11 +157,11 @@ module.exports = class Framework {
             const message = greeting || `Server is running on ${domain}:${port}...`
             await this.inject();
             server.on('request', (req, res) => {
-                this.chaining({
+                this.run({
                     req,
                     res,
                     log: this.log,
-                    startTime: new Date(),
+                    timestamp: new Date(),
                 });
             })
             server.listen(port, domain, this.log(message));
