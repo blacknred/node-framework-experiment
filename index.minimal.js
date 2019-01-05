@@ -7,4 +7,5 @@ f.route({
     schema: null,
     handler: () => 'Hello from [F]ramework!'
 });
+f.log()
 f.go()

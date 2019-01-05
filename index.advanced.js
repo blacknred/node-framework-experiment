@@ -4,11 +4,8 @@ const {
     middleware: restMiddlewares
 } = require('./app');
 
-F.log('Lets setup advanced server!');
-
 const f = new F({
     timer: true,
-    port: 3003,
 });
 
 // [fn,]
