@@ -1,4 +1,3 @@
-const url = require('url');
 const http = require('http');
 
 const Queue = require('./queue');
@@ -68,37 +67,31 @@ module.exports = class F {
     /** 
      * @typedef {Object} Route The route object. 
      * @property {string} method The request http method.
-     * @property {string} url The request endpoint url.
-     * @property {Function} handler The request handler.
+     * @property {string} path The request endpoint url.
+     * @property {function} handler The request handler.
+     * @property {function} before The middleware before request handler.
+     * @property {function} after The middleware after request handler.
+     * @property {object} responseSchema The response api schema.
      */
 
     /** Routing method.
-     * @param {(Route|Route[])} rts - single routing object or array.
+     * @param {(Route|Route[])} schms - single routing object or array.
      * @returns void
      */
-    route(rts) {
-        [].concat(rts).forEach(({
-            method = 'GET',
-            url: routeUrl,
-            middleware,
-            schema,
-            handler = () => {}
-        }) => {
-            this.add(async (ctx, next) => {
-                if (ctx.req.method === method.toUpperCase()) {
-                    var urlParts = url.parse(ctx.req.url, true);
-                    // TODO: reqexp mask?
-                    if (urlParts.pathname === routeUrl) {
-                        // TODO: process the related middleware
-                        const data = await handler(ctx);
-                        // TODO: global or specific responseSchema
-                        ctx.res.body = JSON.stringify({
-                            status: 'ok',
-                            data
-                        });
-                    }
-                }
-                await next();
+    route(schms) {
+        const self = this;
+        [].concat(schms).forEach(function (schm) {
+            const {
+                before,
+                after,
+                ...rest
+            } = schm;
+            // TODO: handle before and after middleware
+            self.add(function (ctx, next) {
+                middleware.router(ctx, next, {
+                    responseSchema: self[_OPTS].responseSchema,
+                    ...rest,
+                });
             });
         });
     }
@@ -111,7 +104,16 @@ module.exports = class F {
         const date = new Date();
         const datetime = date.toJSON().slice(0, 10) +
             " " + new Date(date).toString().split(' ')[4];
-        console.log(`[[F]ramework at ${datetime}]:`, ...args);
+            console.log('\x1b[36m%s\x1b[O', `[[F] at ${datetime}]:`, ...args);
+    }
+
+    /** Error handling method.
+     * @param {number} statusCode
+     * @param {string} message
+     * @returns void
+     */
+    throw (statusCode, message) {
+        // TODO: throw
     }
 
     /** Create and start server.
@@ -146,15 +148,22 @@ module.exports = class F {
             await http
                 .createServer()
                 .on('request', (req, res) => {
-                    this[_QUEUE].run({
-                        req,
-                        res,
-                        log: this.log,
-                        timestamp: new Date(),
-                    }, () => {
-                        res.write(res.body);
-                        res.end();
-                    });
+                    try {
+                        this[_QUEUE].run({
+                            req,
+                            res,
+                            log: this.log,
+                            timestamp: new Date(),
+                        }, () => {
+                            if (res.body) {
+                                res.statusCode = 200;
+                                res.write(res.body);
+                            }
+                            res.end();
+                        });
+                    } catch (err) {
+                        this.log(err)
+                    }
                 })
                 .listen(port, domain, this.log(greeting));
         } catch (err) {

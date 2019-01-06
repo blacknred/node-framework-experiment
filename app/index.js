@@ -56,12 +56,12 @@ APP.controllers.addCar = async (ctx) => {
 
 APP.routes.push(...[{
         method: 'GET',
-        url: '/api/cars',
+        path: '/api/cars',
         handler: APP.controllers.getCars
     },
     {
         method: 'POST',
-        url: '/api/cars',
+        path: '/api/cars',
         // middleware: [],
         handler: APP.controllers.addCar
     },

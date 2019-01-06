@@ -29,6 +29,7 @@ module.exports = class Queue {
      * @private
      */
     run(ctx, finish) {
+        // process.nextTick()
         this[_QUEUE].reduceRight((done, next) => {
             // middleware execution scope
             return function () {

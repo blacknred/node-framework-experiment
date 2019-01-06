@@ -1,3 +1,4 @@
+const url = require('url');
 const qs = require('querystring');
 
 /** Description of the ctx
@@ -54,11 +55,70 @@ function timer(ctx, next) {
  */
 function errorHandler(ctx, next) {
     // TODO: errors handler
+    // ctx.res.statusCode = 404;
+    // ctx.res.write('Internal Server Error');
+    next();
+}
+
+/** Error middleware.
+ * @param {Ctx} ctx
+ * @param {Next} next
+ * @param {object} schema - route schema object
+ * @returns void
+ */
+async function router(ctx, next, schema) {
+    const {
+        responseSchema,
+        path,
+        method = 'GET',
+        handler = () => {},
+    } = schema;
+    if (ctx.req.method === method.toUpperCase()) {
+        const urlParts = url.parse(ctx.req.url, true);
+        ctx.req.params = urlParts.query;
+        const pathMask = path.replace(/:[a-zA-Z0-9]+/g, '[a-zA-Z0-9_]+');
+
+        if (urlParts.pathname.match(new RegExp(pathMask))) {
+            // handler is not a middleware
+            // it's just a function with the ctx object 
+            // that returns data
+            let data = await handler(ctx);
+            if (responseSchema) {
+                data = JSON.stringify({
+                    status: 'ok',
+                    data
+                });
+            }
+            // const r = [
+            //     {
+            //         type: 'object',
+            //         properties: {
+            //             status: {
+            //                 type: 'string',
+            //                 default: 'ok'
+            //             },
+            //             data: {
+            //                 type: 'object'
+            //             }
+            //         }
+            //     },
+            //     {
+            //         type: 'array',
+            //         properties: 
+            //     }
+            // ]
+
+
+
+            ctx.res.body = data;
+        }
+    }
     next();
 }
 
 module.exports = {
     bodyParser,
     timer,
-    errorHandler
+    errorHandler,
+    router,
 }

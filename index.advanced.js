@@ -19,7 +19,7 @@ f.add(restMiddlewares);
 // [conf,]
 f.route({
     method: 'GET',
-    url: '/api/ping',
+    path: '/api/ping',
     // schema:
     // middleware
     handler: () => 'pong'

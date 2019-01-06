@@ -1,11 +1,15 @@
-const F = require('./framework');
+const F = require('./framework/index.es5');
 
-const f = new F();
+const f = new F({
+    timer: true,
+});
+// f.add(() => {
+//     throw new Error('fff');
+// })
 f.route({
     method: 'GET',
-    url: '/',
-    schema: null,
-    handler: () => 'Hello from [F]ramework!'
+    path: '/p',
+    responseSchema: null,
+    handler: () => 'Hello from [F]ramework!',
 });
-f.log()
 f.go()
