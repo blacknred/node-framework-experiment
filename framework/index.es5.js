@@ -142,7 +142,7 @@ module.exports = function F(_opts = {}) {
         try {
             inject();
             var greeting = opts.greeting ||
-                'Server is running on ' + opts.domain + ':' + opts.port + '...';
+                'Server 🚀  on ' + opts.domain + ':' + opts.port + '...';
             http
                 .createServer()
                 .on('request', function (req, res) {

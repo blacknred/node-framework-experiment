@@ -86,7 +86,7 @@ module.exports = class F {
                 after,
                 ...rest
             } = schm;
-            // TODO: handle before and after middleware
+            // TODO: handle before and after middlewares
             self.add(function (ctx, next) {
                 middleware.router(ctx, next, {
                     responseSchema: self[_OPTS].responseSchema,
@@ -144,7 +144,7 @@ module.exports = class F {
 
             this[_QUEUE].queue = queue;
 
-            greeting = greeting || `Server is running on ${domain}:${port}...`
+            greeting = greeting || `Server 🚀  on ${domain}:${port}...`
             await http
                 .createServer()
                 .on('request', (req, res) => {

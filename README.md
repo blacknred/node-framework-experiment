@@ -1,6 +1,7 @@
-# [ F ] - NodeJs REST API Framework 
+# [ F ] - NodeJs Framework
 
-#### The goal of this project is to implement a minimal nodejs REST API framework for educational purposes.
+## The goal of this project is to implement a minimal web framework for educational purposes
 
-### TODO:
+### TODO
+
 * Async Queue - Koa type middleware upstream

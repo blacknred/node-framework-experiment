@@ -6,7 +6,8 @@
   "author": "blcknrd <tretyakov.dmi@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "minimal": "node index.minimal.js",
-    "advanced": "node index.advanced.js"
+    "start": "node index.minimal.js",
+    "start:advanced": "node index.advanced.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

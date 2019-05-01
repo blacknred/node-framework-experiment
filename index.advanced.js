@@ -6,6 +6,7 @@ const {
 
 const f = new F({
     timer: true,
+    port: 4000
 });
 
 // [fn,]
@@ -29,3 +30,7 @@ f.route(restRoutes);
 
 // start
 f.go();
+
+
+// curl -d "name=volvo xc90" -X POST http://localhost:3003/api/cars
+
