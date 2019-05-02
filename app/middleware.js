@@ -2,13 +2,11 @@
 
 module.exports = [
     (async (ctx, next) => {
-        ctx.log('mddlwr2');
         await next();
+        ctx.log('mddlwr2');
     }),
     (async (ctx, next) => {
-        setTimeout(async () => {
-            ctx.log('mddlwr3');
-            await next();
-        }, 100)
-    })
+        ctx.log('mddlwr3');
+        await next();
+    }),
 ];

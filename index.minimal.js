@@ -1,4 +1,4 @@
-const F = require('./framework/index.es5');
+const F = require('./core/index.es5');
 
 const f = new F({
     timer: true,

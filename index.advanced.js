@@ -1,4 +1,4 @@
-const F = require('./framework');
+const F = require('./core');
 const {
     routes: restRoutes,
     middleware: restMiddlewares
@@ -10,19 +10,19 @@ const f = new F({
 });
 
 // [fn,]
-f.add(async (ctx, next) => {
+f.use(async (ctx, next) => {
     await next();
     ctx.log('mddlwr1');
 });
 
-f.add(restMiddlewares);
+f.use(restMiddlewares);
 
 // [conf,]
 f.route({
     method: 'GET',
     path: '/api/ping',
-    // schema:
-    // middleware
+    // responseSchema:
+    // hooks(pre, after)
     handler: () => 'pong'
 });
 
@@ -31,6 +31,4 @@ f.route(restRoutes);
 // start
 f.go();
 
-
-// curl -d "name=volvo xc90" -X POST http://localhost:3003/api/cars
 

@@ -22,7 +22,16 @@ async function addCar(ctx) {
     }
 };
 
+function getPrices(ctx) {
+    try {
+        return Car.getPrices();
+    } catch (err) {
+        ctx.throw(err);
+    }
+}
+
 module.exports = {
     getCars,
     addCar,
+    getPrices
 }
