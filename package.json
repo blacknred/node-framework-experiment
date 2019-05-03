@@ -1,13 +1,32 @@
 {
   "name": "node-framework-experiment",
   "version": "0.0.1",
-  "main": "index.js",
+  "description": "Web app framework",
+  "main": "core/index.js",
   "repository": "https://github.com/blacknred/node-framework-experiment.git",
   "author": "blcknrd <tretyakov.dmi@gmail.com>",
   "license": "MIT",
+  "keywords": [
+    "web",
+    "app",
+    "http",
+    "application",
+    "framework",
+    "middleware"
+  ],
+  "engines": {
+    "node": ">= 8.0.0"
+  },
   "scripts": {
-    "start": "node index.minimal.js",
-    "start:advanced": "node index.advanced.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsc --watch",
+    "example": "ts-node --T example/index.minimal.ts",
+    "example:advanced": "ts-node --T example/index.advanced.ts",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "*",
+    "nodemon": "^1.19.0",
+    "ts-node": "^6.0.2",
+    "typescript": "^2.8.3"
   }
 }

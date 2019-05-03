@@ -1,12 +1,13 @@
-const F = require('./core');
-const {
+import F from '../lib';
+
+import {
     routes: restRoutes,
     middleware: restMiddlewares
-} = require('./app');
+} from './app';
 
-const f = new F({
-    timer: true,
-    port: 4000
+const f: <F> = new F({
+    timer: boolean = true,
+    port: number = 4000
 });
 
 // [fn,]

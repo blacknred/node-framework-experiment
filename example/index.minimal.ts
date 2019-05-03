@@ -1,15 +1,14 @@
-const F = require('./core/index.es5');
+const F = require('../lib/index.es5');
 
-const f = new F({
-    timer: true,
+const f:F = new F({
+    timer: boolean: true,
 });
-// f.add(() => {
-//     throw new Error('fff');
-// })
+
 f.route({
     method: 'GET',
     path: '/p',
     responseSchema: null,
     handler: () => 'Hello from [F]ramework!',
 });
+
 f.go()

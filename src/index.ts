@@ -1,4 +1,4 @@
-const http = require('http');
+import http from 'http';
 
 const Queue = require('./queue');
 const middleware = require('./middleware');
@@ -13,7 +13,7 @@ const METHODS = ['get', 'post', 'update', 'delete', 'head'];
  * @class
  * @public
  */
-module.exports = class F {
+export default class F {
     /**
      * Create a framework.
      * @param {Options} opts - The options value.
