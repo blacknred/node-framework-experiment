@@ -52,12 +52,12 @@ module.exports = class F {
 
         this[_QUEUE].add(middleware.resolver);
 
-        if (this[_OPTS].errorHandler) {
-            this[_QUEUE].add(middleware.error);
-        }
-
         if (this[_OPTS].timer) {
             this[_QUEUE].add(middleware.timer);
+        }
+
+        if (this[_OPTS].errorHandler) {
+            this[_QUEUE].add(middleware.error);
         }
 
         if (this[_OPTS].bodyParser) {
@@ -143,8 +143,8 @@ module.exports = class F {
             domain,
             greeting,
         } = this[_OPTS];
+        greeting = greeting || `Server 🚀  on ${domain}:${port}...`
         try {
-            greeting = greeting || `Server 🚀  on ${domain}:${port}...`
             await http
                 .createServer()
                 .on('request', (req, res) => {
@@ -153,7 +153,6 @@ module.exports = class F {
                             req,
                             res,
                             log: this.log,
-                            timestamp: new Date(),
                         });
                     } catch (err) {
                         this.log(err)

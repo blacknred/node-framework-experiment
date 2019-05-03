@@ -3,6 +3,8 @@ var http = require('http');
 var Queue = require('./queue');
 var middleware = require('./middleware');
 
+const METHODS = ['get', 'post', 'update', 'delete', 'head'];
+
 /** 
  * Class representing a framework.
  * @class
@@ -23,7 +25,7 @@ module.exports = function F(_opts = {}) {
      * @param {Options} opts - The options value.
      */
     var opts = {
-        port: 3004,
+        port: 3000,
         domain: 'localhost',
         bodyParser: true,
         timer: false,
@@ -70,9 +72,15 @@ module.exports = function F(_opts = {}) {
      * @param {(middleware|middleware[])} fns - single middleware or array.
      * @returns void
      */
-    function add(fns) {
-        var q = queue.queue;
-        queue.queue = q.concat(fns)
+    function use(fns) {
+        fns.forEach((fn) => {
+            if (fn instanceof Array) {
+                this.use(...fn)
+            }
+            if (fn instanceof Function) {
+                this[_QUEUE].add(fn);
+            }
+        })
     }
 
     /** 
@@ -91,15 +99,13 @@ module.exports = function F(_opts = {}) {
      */
     function route(schms) {
         [].concat(schms).forEach(function (schm) {
-            // schm.before
-            // schm.after
-            // TODO: handle before and after middleware            
-            if (typeof schm.responseSchema === undefined) {
-                schm.responseSchema = opts.responseSchema;
+            if (METHODS.includes(schm.method.toLowerCase()) && schm.path && schm.handler) {
+                // TODO: handle before and after middlewares
+                use((...args) => middleware.router({
+                    responseSchema: opts.responseSchema,
+                    ...schm,
+                }, ...args));
             }
-            add(function (ctx, next) {
-                middleware.router(ctx, next, schm);
-            });
         });
     }
 
@@ -107,63 +113,43 @@ module.exports = function F(_opts = {}) {
      * @returns void
      */
     function inject() {
+        queue.add(middleware.resolver);
 
-        var q = queue.queue;
-
-        if (opts.bodyParser && middleware.bodyParser) {
-            q.unshift(middleware.bodyParser);
-        }
-        if (opts.timer && middleware.timer) {
-            q.push(middleware.timer);
-        }
-        if (opts.errorHandler && middleware.errorHandler) {
-            q.push(middleware.errorHandler);
+        if (opts.timer) {
+            queue.add(middleware.timer);
         }
 
-        queue.queue = q;
-    }
-
-    /** Finishing method.
-     * @param {object} res - response object.
-     * @returns void
-     */
-    function finish(res) {
-        if (res.body) {
-            res.statusCode = 200;
-            res.write(res.body);
+        if (opts.errorHandler) {
+            queue.add(middleware.error);
         }
-        res.end();
+
+        if (opts.bodyParser) {
+            queue.add(middleware.bodyParser);
+        }
     }
 
     /** Create and start server.
      * @returns void
      */
     function go() {
-        try {
-            inject();
-            var greeting = opts.greeting ||
-                'Server 🚀  on ' + opts.domain + ':' + opts.port + '...';
-            http
-                .createServer()
-                .on('request', function (req, res) {
-                    try {
-                        queue.run({
-                            req,
-                            res,
-                            log,
-                            timestamp: new Date(),
-                        }, function () {
-                            finish(res)
-                        });
-                    } catch (err) {
-                        log(err)
-                    }
-                })
-                .listen(opts.port, opts.domain, log(greeting));
-        } catch (err) {
-            log(err);
-            process.exit(1);
-        }
+        var greeting = opts.greeting ||
+            'Server 🚀  on ' + opts.domain + ':' + opts.port + '...';
+
+        inject();
+        http
+            .createServer()
+            .on('request', function (req, res) {
+                queue.asyncRun({
+                    req,
+                    res,
+                    log,
+                });
+            })
+            .on('error', (err) => {
+                log(err);
+                process.exit(1);
+            })
+            .listen(opts.port, opts.domain, log(greeting));
     }
 
     return {

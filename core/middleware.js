@@ -121,8 +121,9 @@ async function bodyParser(ctx, next) {
  * @returns void
  */
 async function timer(ctx, next) {
+    const start = Date.now();
     await next();
-    const ms = new Date() - ctx.timestamp;
+    const ms = Date.now() - start;
     ctx.res.setHeader('X-Response-Time', ms + 'ms');
     ctx.log('Response time:', ms + 'ms');
 }
