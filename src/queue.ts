@@ -1,34 +1,30 @@
-const _QUEUE = Symbol('queue');
-const _isNEXT = Symbol('isNext');
+const _isNEXT: symbol = Symbol('isNext');
 
 /** Class representing a middleware queue.
  * @class
  * @public
  */
-module.exports = class Queue {
-    /** Create a queue. */
-    constructor() {
-        this[_QUEUE] = [];
-    }
-
+export default class Queue {
     /** 
      * @property {Function[]} queue- The middleware array.
      * @private
      */
-    get queue() {
-        return this[_QUEUE];
+    private _queue: Function[] = [];
+    
+    get queue(): Function[] {
+        return this._queue;
     }
 
-    set queue(queue = []) {
-        this[_QUEUE] = queue;
+    set queue(queue: Function[]) {
+        this._queue = queue;
     }
 
     /** The middleware adding method.
      * @param {Function} fn- a middleware.
      * @returns void
      */
-    add(fn) {
-        this[_QUEUE].push(fn);
+    add(fn: Function): void {
+        this._queue.push(fn);
     }
 
     /** The middleware exec method.
@@ -36,8 +32,8 @@ module.exports = class Queue {
      * @param {Function|undefined} finish- the last middleware.
      * @returns void
      */
-    run(ctx, finish) {
-        this[_QUEUE].reduceRight((next, fn) => {
+    run(ctx: any, finish: Function | undefined): void {
+        this._queue.reduceRight((next: Function, fn: Function) => {
             // middleware execution scope
             return function () {
                 return fn(ctx, next);
@@ -51,8 +47,8 @@ module.exports = class Queue {
      * @returns void
      * @private
      */
-    async asyncRun(ctx, finish) {
-        await this[_QUEUE].reduceRight((nextComposition, fn) => {
+    async asyncRun(ctx: any, finish: Function | undefined): Promise<void> {
+        await this._queue.reduceRight((nextComposition: any, fn: Function) => {
             // middleware execution scope
             return async function () {
                 nextComposition[_isNEXT] = true;

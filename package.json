@@ -18,14 +18,14 @@
     "node": ">= 8.0.0"
   },
   "scripts": {
-    "start": "tsc --watch",
-    "example": "ts-node --T example/index.minimal.ts",
-    "example:advanced": "ts-node --T example/index.advanced.ts",
+    "start": "tsc --watch src",
+    "example": "ts-node --T example/index.minimal.js",
+    "example:advanced": "ts-node --T example/index.advanced.js",
     "test": "jest"
   },
   "devDependencies": {
+    "@types/node": "^11.13.9",
     "jest": "*",
-    "nodemon": "^1.19.0",
     "ts-node": "^6.0.2",
     "typescript": "^2.8.3"
   }

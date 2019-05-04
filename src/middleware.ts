@@ -1,9 +1,9 @@
-const url = require('url');
-const qs = require('querystring');
+import * as url from 'url';
+import * as qs from 'querystring';
 
-const {
+import {
     isReadable
-} = require('./helpers');
+} from './helpers';
 
 /** Description of the ctx
  * @typedef {Object} Ctx- The request context object.  
@@ -35,7 +35,7 @@ const {
  * @param {Next} next
  * @returns void
  */
-async function resolver(ctx, next) {
+export async function resolver(ctx: any, next: Function) {
     ctx.res.statusCode = 200;
     await next();
     if (isReadable(ctx.body)) {
@@ -52,7 +52,7 @@ async function resolver(ctx, next) {
  * @param {Next} next
  * @returns void
  */
-async function router(schema, ctx, next) {
+export async function router(schema: any, ctx: any, next: Function) {
     if (ctx.req.method === schema.method.toUpperCase()) {
         const {
             path,
@@ -61,7 +61,9 @@ async function router(schema, ctx, next) {
         } = schema;
         const urlParts = url.parse(ctx.req.url, true);
         const pathMask = path.replace(/:[a-zA-Z0-9]+/g, '[a-zA-Z0-9_]+');
+        console.log('jj', ctx.req.url, path)
         if (ctx.req.url === path /*urlParts.pathname.match(new RegExp(pathMask))*/) {
+            
             ctx.req.params = urlParts.query;
             let data = await handler(ctx);
             if (responseSchema) {
@@ -100,12 +102,12 @@ async function router(schema, ctx, next) {
  * @param {Next} next
  * @returns void
  */
-async function bodyParser(ctx, next) {
+export async function bodyParser(ctx: any, next: Function) {
     if (ctx.req.method === 'GET') {
         await next();
     } else {
         let data = '';
-        ctx.req.on('data', function (chunk) {
+        ctx.req.on('data', function (chunk: any) {
             data += chunk;
         });
         ctx.req.on('end', async function () {
@@ -120,7 +122,7 @@ async function bodyParser(ctx, next) {
  * @param {Next} next
  * @returns void
  */
-async function timer(ctx, next) {
+export async function timer(ctx: any, next: Function) {
     const start = Date.now();
     await next();
     const ms = Date.now() - start;
@@ -133,7 +135,7 @@ async function timer(ctx, next) {
  * @param {Next} next
  * @returns void
  */
-async function error(ctx, next) {
+export async function error(ctx: any, next: Function) {
     try {
         await next()
     } catch (e) {
@@ -147,12 +149,4 @@ async function error(ctx, next) {
             ctx.body = 'Internal server error';
         }       
     }
-}
-
-module.exports = {
-    resolver,
-    bodyParser,
-    timer,
-    error,
-    router,
 }

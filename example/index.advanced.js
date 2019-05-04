@@ -1,13 +1,14 @@
-import F from '../lib';
+const F = require('../lib').default;
 
-import {
+const {
     routes: restRoutes,
     middleware: restMiddlewares
-} from './app';
+} = require('./app');
 
-const f: <F> = new F({
-    timer: boolean = true,
-    port: number = 4000
+const f = new F({
+    timer: true,
+    port: 4000,
+    asyncMiddleware: true,
 });
 
 // [fn,]
@@ -18,7 +19,7 @@ f.use(async (ctx, next) => {
 
 f.use(restMiddlewares);
 
-// [conf,]
+// [schema,]
 f.route({
     method: 'GET',
     path: '/api/ping',
@@ -32,4 +33,4 @@ f.route(restRoutes);
 // start
 f.go();
 
-
+// export {};

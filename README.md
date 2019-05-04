@@ -5,8 +5,10 @@
 ### Example
 
 ```$
-curl http://localhost:3000/api/cars
+yarn run example:advanced
 curl -d "name=volvo xc90" -X POST http://localhost:3000/api/cars
+curl http://localhost:3000/api/cars
+curl http://localhost:3000/api/cars/prices
 ```
 
 ### TODO

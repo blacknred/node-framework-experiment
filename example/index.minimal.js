@@ -1,14 +1,16 @@
-const F = require('../lib/index.es5');
+const F = require('../lib').default;
 
-const f:F = new F({
-    timer: boolean: true,
+const f = new F({
+    timer: true,
 });
 
 f.route({
     method: 'GET',
-    path: '/p',
+    path: '/',
     responseSchema: null,
     handler: () => 'Hello from [F]ramework!',
 });
 
-f.go()
+f.go();
+
+// export {};
