@@ -1,5 +1,7 @@
 # [ F ] - NodeJs Framework
 
+[![Build Status](https://travis-ci.org/blacknred/node-framework-experiment.svg?branch=master)](https://travis-ci.org/blacknred/node-framework-experiment)
+
 ## The goal of this project is to implement a minimal web framework for educational purposes
 
 ### Example
